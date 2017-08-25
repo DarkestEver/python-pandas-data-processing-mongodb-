@@ -8,9 +8,13 @@ import os
 import re            
 import pymongo
 import pandas as pd
+import pandasql as pdsql
 
+
+#to run sql on dataframe, all dataframe will be work as table
+pysql = lambda q: pdsql.sqldf(q, globals())
 #mongdb connection
-client = pymongo.MongoClient('mongodb://localhost:27017/')
+client = pymongo.MongoClient('mongodb://<darkestever>:<k@8090551004>@ds159953.mlab.com:59953/test_db')
 db = client['stakoverflow']
 
 #get all files from directory
@@ -38,7 +42,7 @@ def df_to_mongodb(df_data):
 # file filtering 
 def file_filtering(df_data,filename,sheetname=''):
     ls_c=[]
-    ls_col = list(df_data.columns)           
+    ls_col = list(df_data.columns).lower()
     len_ls_col = len(ls_col)
     if len_ls_col >  3 :
         ls_filesht = [filename, sheetname,'ok']
