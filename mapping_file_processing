@@ -1,0 +1,25 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Aug 26 15:44:35 2017
+
+@author: ksingh
+"""
+import pandas as pd
+path_mapping_col = 'C:\\Users\\ksingh\\Desktop\\Mapping Files\\col_mapping\\output_2017TelemarketingCampaigns UPDATED2.csv'
+df = pd.read_csv(path_mapping_col,encoding='ISO_8859_5')
+df = df.fillna('')
+df = df.apply(lambda x: x.astype(str).str.lower())
+df_head = df.columns
+
+
+
+#df.loc[df['Address'].isin('Address')]
+
+
+for col_name in df_head:
+    if len(df.loc[df[col_name] == 'address']) > 0:
+        print (col_name)
+        
+
+def str_to_lcase_alphanum(strng):
+     return ("".join(re.findall("\w", strng))).lower()
