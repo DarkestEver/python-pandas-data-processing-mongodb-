@@ -4,7 +4,9 @@ import pymongo
 import pandas as pd
 import pandasql as pdsql
 import time
-
+import psycopg2
+import sqlalchemy
+from sqlalchemy import create_engine
 
 #get all files from directory
 def get_filepaths(directory):
@@ -73,3 +75,9 @@ pysql = lambda q: pdsql.sqldf(q, globals())
 sql_str = 'select '+ strng +' from df_file_data'
 df = pysql(sql_str).head()
 
+conn = psycopg2.connect(database="postgres", user = "postgres", password = "root", 
+                        host = "localhost", port = "5432")
+
+engine = create_engine("postgresql://postgres:root@localhost:5432/postgres")
+df.to_sql('db_table2', engine, if_exists='append')
+#add file created date to dataframe
