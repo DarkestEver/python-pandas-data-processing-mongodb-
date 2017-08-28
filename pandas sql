@@ -1,0 +1,75 @@
+import os
+import re            
+import pymongo
+import pandas as pd
+import pandasql as pdsql
+import time
+
+
+#get all files from directory
+def get_filepaths(directory):
+    file_paths = [] 
+    for root, directories, files in os.walk(directory):
+        for filename in files:
+            filepath = os.path.join(root, filename)
+            file_paths.append(filepath)
+    return file_paths
+
+# read mapping csv file and return dataframe of it
+def read_mapping_csv(path):
+    df_mapping = pd.read_csv(path_mapping_col,encoding='ISO_8859_5')
+    df_mapping = df_mapping.fillna('')
+    df_mapping = df_mapping.apply(lambda x: x.astype(str).str.lower())
+    return   df_mapping
+
+#extract alphanumeric from string and convert into lower case
+def str_to_lcase_alphanum(strng):
+     return ("".join(re.findall("\w", strng))).lower()
+
+#return the dataframe of matching value[[ key, value],[ key, value],[ key, value]]
+def get_matched_col(ls_file_header, df_mapping_col):
+    df_mapped = pd.DataFrame()
+    for str_hd_col in ls_file_header:
+        for mapping_col_name in df_mapping_col:
+            ls_mapped = []
+            if len(df_mapping.loc[df_mapping[mapping_col_name] == str_to_lcase_alphanum(str_hd_col) ]) > 0:
+               ls_mapped.append([mapping_col_name ,  str_hd_col])
+               df_mapped = df_mapped.append(ls_mapped)
+    return df_mapped
+# concatenate the matching columns in sql select column format
+def generate_sql(lf_mapping_col,df_mapped ):
+    str_col = ''
+    for x in lf_mapping_col:
+        df_vals = df_mapped.loc[df_mapped[0] == x ]
+        len_df_vals = len(df_vals)
+        if len_df_vals == 0:
+            str_col =  'NULL as ' + x + ', ' + str_col
+        if len_df_vals == 1:
+            str_col = df_vals[1][0] + ' as ' + x + ',' + str_col
+        if len_df_vals > 1:
+            str_temp = ''
+            for i in df_vals[1][0]:
+                str_temp = '`'+ i + '` || ":" || ' + str_temp 
+            str_temp = str_temp[:-10]
+            str_col = str_temp + ' as ' + x + ',' + str_col
+    str_col = str_col[:-1]
+    return str_col
+
+path_mapping_col = 'C:\\Users\\myself\\Desktop\\pyhton\\mapping.csv'
+
+#select 
+xl_fil = pd.ExcelFile('E:\\keshav docs\\OneDrive\\Projects\\sample data\\OneDrive_1_7-2-2017\\01 - Excel\\Transaction_Sample.xlsx')
+df_file_data = xl_fil.parse('Sheet1')
+ls_file_header = list(df_file_data.columns) #ls_file_header raw file header in list
+
+df_mapping = read_mapping_csv(path_mapping_col)
+lf_mapping_col = df_mapping.columns
+df_mapped = get_matched_col(ls_file_header, df_mapping_col)
+strng = generate_sql(lf_mapping_col,df_mapped )
+print(strng)
+
+#to run sql on dataframe, all dataframe will be work as table
+pysql = lambda q: pdsql.sqldf(q, globals())
+sql_str = 'select '+ strng +' from df_file_data'
+df = pysql(sql_str).head()
+
